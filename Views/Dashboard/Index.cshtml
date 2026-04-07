@@ -1,0 +1,88 @@
+@model AIResumeAnalyzer.MVC.Models.ViewModels.DashboardHomeViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<header class="dashboard-header">
+            <h1>Welcome, @Model.User.Name</h1>
+            <p>Your AI-powered career preparation steps</p>
+        </header>
+
+        <!-- Cards Section -->
+        <section class="cards-grid">
+            <!-- Card 1 -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-file-alt card-icon"></i>
+                    <h3>AI Resume Analysis</h3>
+                </div>
+
+                <p class="card-desc">
+                    Analyze your resume vs job description
+                </p>
+
+                <div class="stats">
+                    <div>
+                        <span class="stat-title">Skill Match</span>
+                        <span class="stat-value">@(Model.LatestSkillMatch > 0 ? Model.LatestSkillMatch + "%" : "N/A")</span>
+                    </div>
+                    <div>
+                        <span class="stat-title">Score</span>
+                        <span class="stat-value">@(Model.LatestAtsScore > 0 ? Model.LatestAtsScore.ToString() : "N/A")</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="window.location.href='/resume-analyze'">Analyze Resume</button>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-robot card-icon"></i>
+                    <h3>AI Interview Prep</h3>
+                </div>
+
+                <p class="card-desc">
+                    Practice AI-generated interview questions
+                </p>
+
+                <div class="stats">
+                    <div>
+                        <span class="stat-title">Questions</span>
+                        <span class="stat-value">100</span>
+                    </div>
+                    <div>
+                        <span class="stat-title">Level</span>
+                        <span class="stat-value">Intermediate</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="window.location.href='/question-gen'">Start Practicing</button>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-user-tie card-icon"></i>
+                    <h3>AI Interview Simulator</h3>
+                </div>
+
+                <p class="card-desc">
+                    Simulate real interview scenarios with AI
+                </p>
+
+                <div class="stats">
+                    <div>
+                        <span class="stat-title">Readiness</span>
+                        <span class="stat-value">@(Model.LatestReadinessScore > 0 ? Model.LatestReadinessScore + "%" : "N/A")</span>
+                    </div>
+                    <div>
+                        <span class="stat-title">Sessions</span>
+                        <span class="stat-value">@Model.TotalSessions</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="window.location.href='/ai-simulator'">Start Mock Interview</button>
+            </div>
+</section>

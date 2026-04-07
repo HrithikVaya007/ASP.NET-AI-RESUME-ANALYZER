@@ -1,0 +1,246 @@
+@model AIResumeAnalyzer.MVC.Models.User
+@{
+    ViewData["Title"] = "Compare";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section DashboardStyles {
+    <style>
+        .compare-header {
+            margin-bottom: 30px;
+        }
+
+        .compare-header h1 {
+            font-size: 28px;
+            margin-bottom: 6px;
+            color: #1f2937;
+        }
+
+        .compare-header p {
+            color: #374151;
+            margin-bottom: 30px;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .compare-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 15px;
+        }
+
+        .upload-area {
+            border: 2px dashed #a5b4fc;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #6a5cff;
+            background: #fdfdfd;
+        }
+
+        .upload-area i {
+            font-size: 32px;
+            color: #6a5cff;
+            margin-bottom: 10px;
+        }
+
+        .compare-btn-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .btn-compare {
+            padding: 14px 40px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #6a5cff, #8b5cf6);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(106, 92, 255, 0.3);
+        }
+
+        .btn-compare:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(106, 92, 255, 0.4);
+        }
+        
+        .vs-circle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #6a5cff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
+        .compare-wrapper {
+            position: relative;
+        }
+
+        @@media (max-width: 900px) {
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+            .vs-circle {
+                display: none;
+            }
+        }
+    </style>
+}
+
+<header class="compare-header">
+    <h1>Compare Resumes against Job Descriptions</h1>
+    <p>Upload a resume and a job description to see how well they match.</p>
+</header>
+
+<div class="compare-wrapper">
+    <div class="compare-grid">
+        
+        <!-- Resume A Side -->
+        <div class="compare-card">
+            <div class="card-title">1. Upload Resume A</div>
+            <div class="file-upload-wrapper" id="dropZoneA">
+                <input type="file" id="resumeFileA" accept=".pdf,.docx" hidden />
+                <div class="upload-area" onclick="document.getElementById('resumeFileA').click()">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <p id="fileNameA">Drag & drop resume A here</p>
+                    <span style="font-size: 13px; color: #9ca3af;">or click to browse</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resume B Side -->
+        <div class="compare-card">
+            <div class="card-title">2. Upload Resume B</div>
+            <div class="file-upload-wrapper" id="dropZoneB">
+                <input type="file" id="resumeFileB" accept=".pdf,.docx" hidden />
+                <div class="upload-area" onclick="document.getElementById('resumeFileB').click()">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <p id="fileNameB">Drag & drop resume B here</p>
+                    <span style="font-size: 13px; color: #9ca3af;">or click to browse</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Job Description Bottom -->
+    <div class="compare-card" style="margin-top: 30px;">
+        <div class="card-title">3. Job Description</div>
+        <textarea id="jdInput" class="form-control" style="height: 150px; background: #fafafa; border: 2px dashed #a5b4fc;" placeholder="Paste the Job Description to compare against..."></textarea>
+    </div>
+</div>
+
+<div class="compare-btn-container">
+    <button class="btn-compare" id="compareBtn">Generate Comparison Report</button>
+</div>
+
+<!-- Comparison Results -->
+<div id="compareResults" style="display: none; margin-top: 40px; animation: fadeIn 0.5s ease;">
+    <h2 style="text-align: center; margin-bottom: 30px; color: #4f46e5;">Orbit AI Comparison Analysis</h2>
+    <div class="compare-grid" id="resultsGrid">
+        <!-- Results injected here -->
+    </div>
+</div>
+
+@section DashboardScripts {
+    <script>
+        const fileA = document.getElementById('resumeFileA');
+        const fileB = document.getElementById('resumeFileB');
+        
+        fileA.onchange = e => { if(e.target.files[0]) document.getElementById('fileNameA').innerText = e.target.files[0].name; };
+        fileB.onchange = e => { if(e.target.files[0]) document.getElementById('fileNameB').innerText = e.target.files[0].name; };
+
+        document.getElementById('compareBtn').addEventListener('click', async function() {
+            const jd = document.getElementById('jdInput').value.trim();
+            if (!fileA.files[0] || !fileB.files[0] || !jd) {
+                alert("Please provide both resumes and a job description.");
+                return;
+            }
+
+            this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Comparison...';
+            this.disabled = true;
+
+            const formData = new FormData();
+            formData.append('FileA', fileA.files[0]);
+            formData.append('FileB', fileB.files[0]);
+            formData.append('JobDescription', jd);
+
+            try {
+                const response = await fetch('/api/resume/compare', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    renderComparison(data.data);
+                } else {
+                    alert(data.message || "Comparison failed.");
+                }
+            } catch (err) {
+                alert("Error connecting to server.");
+            } finally {
+                this.innerHTML = 'Generate Comparison Report';
+                this.disabled = false;
+            }
+        });
+
+        function renderComparison(res) {
+            const resultsDiv = document.getElementById('compareResults');
+            const grid = document.getElementById('resultsGrid');
+            resultsDiv.style.display = 'block';
+
+            const winnerA = res.resumeA.atsScore >= res.resumeB.atsScore;
+            const winnerB = !winnerA;
+            
+            grid.innerHTML = 
+                '<div class="compare-card" style="border: 2px solid ' + (winnerA ? '#00f5d4' : 'transparent') + '">' +
+                    '<h3 style="color: #4f46e5">Resume A: ' + res.resumeA.name + '</h3>' +
+                    '<div style="font-size: 24px; font-weight: 800; color: ' + (winnerA ? '#00f5d4' : '#6b7280') + '">Score: ' + res.resumeA.atsScore + '%</div>' +
+                    '<p><strong>Strengths:</strong> ' + res.resumeA.strengths.join(', ') + '</p>' +
+                    '<p><strong>Verdict:</strong> ' + res.resumeA.verdict + '</p>' +
+                '</div>' +
+                '<div class="compare-card" style="border: 2px solid ' + (winnerB ? '#00f5d4' : 'transparent') + '">' +
+                    '<h3 style="color: #4f46e5">Resume B: ' + res.resumeB.name + '</h3>' +
+                    '<div style="font-size: 24px; font-weight: 800; color: ' + (winnerB ? '#00f5d4' : '#6b7280') + '">Score: ' + res.resumeB.atsScore + '%</div>' +
+                    '<p><strong>Strengths:</strong> ' + res.resumeB.strengths.join(', ') + '</p>' +
+                    '<p><strong>Verdict:</strong> ' + res.resumeB.verdict + '</p>' +
+                '</div>';
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+}

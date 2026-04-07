@@ -1,0 +1,104 @@
+@{
+    ViewData["Title"] = "Register";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/RegisterForm.css" asp-append-version="true" />
+}
+
+<div class="login-container">
+    <div class="auth-wrapper">
+        <div class="brand-section">
+            <h1 class="brand-name">Orbit AI</h1>
+            <p class="brand-tagline">Navigating your career path.</p>
+        </div>
+        <form class="login-form" id="registerForm">
+            <label>
+                Full Name
+                <input
+                    type="text"
+                    id="regName"
+                    placeholder="Full Name"
+                    required />
+            </label>
+            <label>
+                Email
+                <input
+                    type="email"
+                    id="regEmail"
+                    placeholder="name@company.com"
+                    required />
+            </label>
+            <label>
+                Phone Number
+                <input
+                    type="tel"
+                    id="regPhone"
+                    placeholder="+1 234 567 8900"
+                    required />
+            </label>
+            <label>
+                Password
+                <input
+                    type="password"
+                    id="regPassword"
+                    placeholder="••••••••"
+                    required />
+            </label>
+            <label>
+                Confirm Password
+                <input
+                    type="password"
+                    id="regConfirm"
+                    placeholder="••••••••"
+                    required />
+            </label>
+            <button type="submit">Register</button>
+            <p id="errorBox" style="color:red; display:none;"></p>
+
+            <div class="form-footer" style="margin-top: 15px;">
+                <a href="/">← Back to Login</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("registerForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById("regName").value;
+            const email = document.getElementById("regEmail").value;
+            const phone = document.getElementById("regPhone").value;
+            const password = document.getElementById("regPassword").value;
+            const confirm = document.getElementById("regConfirm").value;
+
+            if (password !== confirm) {
+                errorBox.innerText = "Passwords do not match.";
+                errorBox.style.display = "block";
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, phone, password })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    window.location.href = "/login"; // Redirect to login after successful register
+                } else {
+                    errorBox.innerText = data.message || "Registration failed.";
+                    errorBox.style.display = "block";
+                }
+            } catch (err) {
+                errorBox.innerText = "Error connecting to server.";
+                errorBox.style.display = "block";
+            }
+        });
+    </script>
+}

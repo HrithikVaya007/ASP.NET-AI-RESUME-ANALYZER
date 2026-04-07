@@ -1,0 +1,308 @@
+@{
+    ViewData["Title"] = "AI Interview Simulator";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/simulator.css" asp-append-version="true" />
+}
+
+<div class="simulator-wrapper">
+    <div class="header-section">
+        <h1 class="gradient-text">AI Interview Simulator</h1>
+        <div class="session-meta">
+            <span class="meta-pill"><i class="fa-solid fa-briefcase"></i> Position: MLOps Engineer</span>
+            <span class="meta-pill"><i class="fa-solid fa-layer-group"></i> Level: Intermediate</span>
+        </div>
+    </div>
+
+    <div class="simulator-main" id="simulatorMain">
+        <!-- AI Interviewer Card (Left) -->
+        <div class="ai-card glass-panel">
+            <div class="ai-core-container">
+                <!-- Advanced animated core representation -->
+                <div class="ai-core" id="aiCore">
+                    <div class="core-ring core-ring-1"></div>
+                    <div class="core-ring core-ring-2"></div>
+                    <div class="core-node"><i class="fa-solid fa-microchip"></i></div>
+                </div>
+            </div>
+            
+            <h2 class="ai-name">Orbit AI Entity</h2>
+            <p class="ai-role">Technical Interviewer</p>
+            
+            <div class="status-indicator">
+                <div class="pulse-dot" id="micStatusDot"></div>
+                <span id="micStatusText">Awaiting Initialization...</span>
+            </div>
+            
+            <div class="live-status">
+                <div class="live-dot"></div>
+                <span>SECURE CONNECTION</span>
+            </div>
+            
+            <div class="audio-waves" id="audioWaves" style="display: none;">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+            </div>
+        </div>
+
+        <!-- Chat / Interview Panel (Right) -->
+        <div class="chat-container glass-panel" id="interviewChat">
+            <div class="question-header">
+                <div class="progress-pill" id="questionNumberText">Question 1 of 3</div>
+            </div>
+            
+            <div class="question-body">
+                <h3 id="questionText">How would you deploy a scalable ML pipeline?</h3>
+                <p class="question-hint">Take your time. Speak clearly into the microphone or type your response.</p>
+            </div>
+            
+            <div class="input-area">
+                <textarea id="answerInput" placeholder="Type your response or use voice input..."></textarea>
+                
+                <button class="mic-btn" id="micBtn" title="Hold/Click to speak">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+            </div>
+            
+            <div class="control-actions">
+                <button class="btn btn-secondary" id="endBtn"><i class="fa-solid fa-circle-stop"></i> End Early</button>
+                <button class="btn btn-primary" id="nextBtn">Next Question <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Feedback Summary Panel -->
+        <div class="feedback-panel glass-panel" id="feedbackContainer" style="display: none;">
+            <div class="feedback-header">
+                <h2>Session Analysis Complete</h2>
+                <div class="animated-check"><i class="fa-solid fa-check-circle"></i></div>
+            </div>
+            
+            <div class="score-display">
+                <svg class="circular-chart" viewBox="0 0 36 36">
+                    <path class="circle-bg"
+                        d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle-path"
+                        stroke-dasharray="80, 100"
+                        d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <text x="18" y="20.35" class="percentage">8 / 10</text>
+                </svg>
+                <p class="score-label">Overall Performance</p>
+            </div>
+            
+            <div class="feedback-content">
+                <div class="feedback-card">
+                    <h4><i class="fa-solid fa-thumbs-up" style="color: #00f5d4;"></i> Strengths</h4>
+                    <p>Good performance. Solid understanding of ML continuous integration and deployment architecture.</p>
+                </div>
+                <div class="feedback-card">
+                    <h4><i class="fa-solid fa-arrow-trend-up" style="color: #f72585;"></i> Areas for Improvement</h4>
+                    <p>Work on elaborating your CI/CD answers with specific tools like Jenkins, GitHub Actions, or ArgoCD to ground your theory in practical implementations.</p>
+                </div>
+            </div>
+
+            <div class="control-actions" style="margin-top: 30px; justify-content: center;">
+                <button class="btn btn-primary" onclick="window.location.reload()"><i class="fa-solid fa-rotate-right"></i> Start New Session</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/dashboard'"><i class="fa-solid fa-house"></i> Return to Dashboard</button>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const resumeId = localStorage.getItem("lastResumeId");
+            const detectedRole = localStorage.getItem("detectedRole");
+            
+            if (!resumeId) {
+                alert("Please analyze a resume first to start a simulator session.");
+                window.location.href = "/resume-analyze";
+                return;
+            }
+
+            if (detectedRole) {
+                 document.querySelector('.meta-pill i.fa-briefcase').parentElement.innerHTML = `<i class="fa-solid fa-briefcase"></i> Position: ${detectedRole}`;
+            }
+
+            let sessionId = null;
+            let currentQuestionCount = 0;
+            const maxQuestions = 5;
+            let isListening = false;
+            let recognition = null;
+
+            const micBtn = document.getElementById('micBtn');
+            const answerInput = document.getElementById('answerInput');
+            const questionNumberText = document.getElementById('questionNumberText');
+            const questionText = document.getElementById('questionText');
+            const micStatusDot = document.getElementById('micStatusDot');
+            const micStatusText = document.getElementById('micStatusText');
+            const aiCore = document.getElementById('aiCore');
+            const audioWaves = document.getElementById('audioWaves');
+            
+            const nextBtn = document.getElementById('nextBtn');
+            const endBtn = document.getElementById('endBtn');
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const interviewChat = document.getElementById('interviewChat');
+
+            // 1. Start Session
+            try {
+                const response = await fetch('/api/interview/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resumeId: resumeId })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    sessionId = data.data.id;
+                    // Trigger first question
+                    loadNextQuestion("");
+                } else {
+                    alert(data.message || "Failed to start interview session.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error connecting to server.");
+            }
+
+            async function loadNextQuestion(previousAnswer) {
+                nextBtn.disabled = true;
+                nextBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+                micStatusText.innerText = "Generating next question...";
+                
+                try {
+                    const response = await fetch('/api/interview/next', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sessionId: sessionId, previousAnswer: previousAnswer })
+                    });
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        currentQuestionCount++;
+                        questionNumberText.innerText = `Question ${currentQuestionCount} of ${maxQuestions}`;
+                        questionText.innerText = data.data.nextQuestion;
+                        answerInput.value = "";
+                        
+                        if (data.data.isComplete || currentQuestionCount >= maxQuestions) {
+                            nextBtn.innerHTML = 'Finish Interview <i class="fa-solid fa-check"></i>';
+                            nextBtn.onclick = handleEnd;
+                        } else {
+                            nextBtn.innerHTML = 'Next Question <i class="fa-solid fa-arrow-right"></i>';
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    nextBtn.disabled = false;
+                    micStatusText.innerText = "Idle / Awaiting Input";
+                }
+            }
+
+            // Setup Speech Recognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.lang = "en-US";
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.onresult = (event) => {
+                    let finalTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+                    }
+                    if(finalTranscript) answerInput.value += (answerInput.value ? " " : "") + finalTranscript;
+                };
+                recognition.onend = () => { if(isListening) recognition.start(); else setListeningState(false); };
+            }
+
+            function setListeningState(listening) {
+                isListening = listening;
+                if (listening) {
+                    micBtn.classList.add('active');
+                    micStatusDot.classList.add('pulse-active');
+                    micStatusDot.style.background = '#00f5d4';
+                    micStatusText.innerText = "Analyzing Audio Stream...";
+                    aiCore.classList.add('listening');
+                    audioWaves.style.display = 'flex';
+                } else {
+                    micBtn.classList.remove('active');
+                    micStatusDot.classList.remove('pulse-active');
+                    micStatusDot.style.background = '#888';
+                    micStatusText.innerText = "Idle / Awaiting Input";
+                    aiCore.classList.remove('listening');
+                    audioWaves.style.display = 'none';
+                }
+            }
+
+            micBtn.addEventListener('click', () => {
+                if (!recognition) { alert("Speech recognition not supported."); return; }
+                if (isListening) { isListening = false; recognition.stop(); setListeningState(false); }
+                else { recognition.start(); setListeningState(true); }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentQuestionCount < maxQuestions) {
+                    loadNextQuestion(answerInput.value);
+                }
+            });
+
+            endBtn.addEventListener('click', handleEnd);
+
+            async function handleEnd() {
+                if(isListening) { isListening = false; recognition.stop(); }
+                
+                interviewChat.style.opacity = '0.5';
+                interviewChat.style.pointerEvents = 'none';
+                micStatusText.innerText = "Analyzing performance...";
+                micStatusDot.style.background = '#f72585';
+
+                try {
+                    const response = await fetch('/api/interview/feedback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sessionId: sessionId })
+                    });
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        displayFeedback(data.data);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            function displayFeedback(feedback) {
+                interviewChat.style.display = 'none';
+                feedbackContainer.style.display = 'block';
+                
+                // Update Score
+                const scoreValue = feedback.finalScore;
+                document.querySelector('.percentage').innerText = `${scoreValue / 10} / 10`;
+                document.querySelector('.circle-path').style.strokeDasharray = `${scoreValue}, 100`;
+
+                // Update Strengths
+                const strengthsHtml = feedback.strengths.map(s => `<li>${s}</li>`).join('') || '<li>No specific strengths noted.</li>';
+                document.querySelector('.feedback-card:nth-child(1) p').innerHTML = `<ul>${strengthsHtml}</ul>`;
+
+                // Update Areas for Improvement
+                const weaknessesHtml = feedback.weaknesses.map(w => `<li>${w}</li>`).join('') || '<li>No specific weaknesses noted.</li>';
+                const suggestionsHtml = feedback.suggestions.map(s => `<li>${s}</li>`).join('') || '';
+                document.querySelector('.feedback-card:nth-child(2) p').innerHTML = `
+                    <strong>Weaknesses:</strong><ul>${weaknessesHtml}</ul>
+                    <strong>Suggestions:</strong><ul>${suggestionsHtml}</ul>
+                `;
+
+                void feedbackContainer.offsetWidth;
+                feedbackContainer.classList.add('fade-in');
+            }
+        });
+    </script>

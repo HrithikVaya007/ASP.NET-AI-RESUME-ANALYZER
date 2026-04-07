@@ -1,0 +1,263 @@
+@model AIResumeAnalyzer.MVC.Models.User
+@{
+    ViewData["Title"] = "Profile";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var initial = !string.IsNullOrEmpty(Model.Name) ? Model.Name[0].ToString().ToUpper() : "?";
+}
+
+@section DashboardStyles {
+    <style>
+        .profile-header {
+            margin-bottom: 30px;
+        }
+
+        .profile-header h1 {
+            font-size: 28px;
+            margin-bottom: 6px;
+            color: #1f2937;
+        }
+
+        .profile-header p {
+            color: #374151;
+        }
+
+        .profile-container {
+            display: flex;
+            gap: 30px;
+            max-width: 900px;
+        }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            flex: 1;
+        }
+
+        .profile-sidebar {
+            width: 300px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #6a5cff, #a86bff);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 48px;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(106, 92, 255, 0.3);
+        }
+
+        .profile-sidebar h3 {
+            font-size: 22px;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .profile-sidebar p {
+            color: #6b7280;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .badge-premium {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .badge-role {
+            background: linear-gradient(135deg, #6a5cff, #8b5cf6);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #f9fafb;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #6a5cff;
+            box-shadow: 0 0 0 3px rgba(106, 92, 255, 0.15);
+            background: #fff;
+        }
+
+        .btn-update {
+            padding: 12px 30px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #6a5cff, #8b5cf6);
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-update:hover {
+            opacity: 0.9;
+        }
+
+        .update-msg {
+            display: none;
+            margin-top: 12px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .update-msg.success {
+            background: #d1fae5;
+            color: #065f46;
+            display: block;
+        }
+
+        .update-msg.error {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+
+        @@media (max-width: 800px) {
+            .profile-container {
+                flex-direction: column;
+            }
+            .profile-sidebar {
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+<header class="profile-header">
+    <h1>Your Profile</h1>
+    <p>Manage your personal information and credentials.</p>
+</header>
+
+<div class="profile-container">
+    
+    <!-- Profile Sidebar -->
+    <div class="profile-sidebar">
+        <div class="avatar">@initial</div>
+        <h3>@Model.Name</h3>
+        <p>@Model.Email</p>
+        <div class="badge-role"><i class="fa-solid fa-user" style="margin-right:5px;"></i>@Model.Role</div>
+        <br />
+        <div class="badge-premium"><i class="fa-solid fa-crown" style="margin-right:5px;"></i>Pro Member</div>
+        
+        <div style="font-size: 13px; color: #9ca3af; margin-top: 10px;">
+            Member since: @Model.CreatedAt.ToString("MMM yyyy")
+        </div>
+    </div>
+
+    <!-- Profile Details Card -->
+    <div class="profile-card">
+        <form id="profileForm">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" class="form-control" id="profileName" value="@Model.Name" />
+            </div>
+            
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" class="form-control" id="profileEmail" value="@Model.Email" readonly 
+                       style="background: #e5e7eb; cursor: not-allowed;" />
+            </div>
+            
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" class="form-control" id="profilePhone" value="@(Model.Phone ?? "")" placeholder="Enter your phone number" />
+            </div>
+            
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" class="form-control" id="profileLocation" value="@(Model.Location ?? "")" placeholder="Enter your location" />
+            </div>
+
+            <div style="margin-top: 30px;">
+                <button type="submit" class="btn-update">Update Profile</button>
+            </div>
+            <div class="update-msg" id="updateMsg"></div>
+        </form>
+    </div>
+
+</div>
+
+@section DashboardScripts {
+    <script>
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msgBox = document.getElementById('updateMsg');
+            msgBox.className = 'update-msg';
+            msgBox.style.display = 'none';
+
+            const payload = {
+                name: document.getElementById('profileName').value,
+                phone: document.getElementById('profilePhone').value,
+                location: document.getElementById('profileLocation').value
+            };
+
+            try {
+                const res = await fetch('/api/user/update-profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    msgBox.textContent = 'Profile updated successfully!';
+                    msgBox.className = 'update-msg success';
+                    // Reload to reflect changes in sidebar
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    msgBox.textContent = data.message || 'Failed to update profile.';
+                    msgBox.className = 'update-msg error';
+                }
+            } catch (err) {
+                msgBox.textContent = 'Error connecting to server.';
+                msgBox.className = 'update-msg error';
+            }
+        });
+    </script>
+}

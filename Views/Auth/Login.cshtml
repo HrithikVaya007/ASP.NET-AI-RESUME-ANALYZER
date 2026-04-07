@@ -1,0 +1,75 @@
+@{
+    ViewData["Title"] = "Login";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/LoginForm.css" asp-append-version="true" />
+}
+
+<div class="login-container">
+    <div class="auth-wrapper"> 
+        <div class="brand-section">
+            <h1 class="brand-name">Orbit AI</h1>
+            <p class="brand-tagline">Navigating your career path.</p>
+        </div>
+
+        <form class="login-form" id="loginForm">
+            <label>
+                Email 
+                <input 
+                    type="email"
+                    id="loginEmail"
+                    placeholder="name@company.com"
+                    required />
+            </label>
+
+            <label>
+                Password
+                <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="••••••••"
+                    required />
+            </label>
+
+            <button type="submit">Sign In</button>
+            <p id="errorBox" style="color:red; display:none;"></p>
+            <p>Don't have an account? <a href="/register">Sign Up</a></p>
+            <p>Forgot your Password ? <a href="/forgotpassword">Forgot Password</a></p>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            const errorBox = document.getElementById("errorBox");
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // The JWT cookie is set automatically by the server response
+                    // Store user name in localStorage for optional client-side use
+                    localStorage.setItem("userName", data.data.user.name);
+                    window.location.href = "/dashboard";
+                } else {
+                    errorBox.innerText = data.message || "Invalid credentials.";
+                    errorBox.style.display = "block";
+                }
+            } catch (err) {
+                errorBox.innerText = "Error connecting to servers.";
+                errorBox.style.display = "block";
+            }
+        });
+    </script>
+}

@@ -1,0 +1,225 @@
+@{
+    ViewData["Title"] = "Revolutionize Your Career";
+    Layout = "~/Views/Shared/_LandingLayout.cshtml";
+}
+
+<style>
+    .hero {
+        padding: 180px 8% 100px;
+        text-align: center;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .hero-badge {
+        background: rgba(106, 92, 255, 0.1);
+        border: 1px solid rgba(106, 92, 255, 0.2);
+        color: var(--primary);
+        padding: 8px 16px;
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 25px;
+        display: inline-block;
+    }
+
+    .hero h1 {
+        font-size: clamp(40px, 8vw, 72px);
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 25px;
+        background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+        font-size: 19px;
+        color: #94a3b8;
+        margin-bottom: 40px;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-btns {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        padding: 16px 36px;
+        border-radius: 14px;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .btn-secondary {
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        padding: 16px 36px;
+        border-radius: 14px;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    /* FEATURES */
+    .features-section {
+        padding: 100px 8%;
+    }
+
+    .section-title {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+    .section-title h2 {
+        font-size: 36px;
+        font-weight: 800;
+        margin-bottom: 15px;
+    }
+
+    .section-title p {
+        color: #94a3b8;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+
+    .feature-card {
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        padding: 40px;
+        border-radius: 24px;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(106, 92, 255, 0.3);
+        transform: translateY(-5px);
+    }
+
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(106, 92, 255, 0.1);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: var(--primary);
+        margin-bottom: 25px;
+    }
+
+    .feature-card h3 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+
+    .feature-card p {
+        color: #94a3b8;
+        font-size: 15px;
+    }
+
+    .stats-section {
+        padding: 100px 8%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        text-align: center;
+    }
+
+    .stat-val {
+        font-size: 48px;
+        font-weight: 800;
+        color: #fff;
+        display: block;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+</style>
+
+<section class="hero">
+    <span class="hero-badge">Powered by Gemini Pro Vision</span>
+    <h1>Your AI-Powered Career Sentinel</h1>
+    <p>Orbit AI analyzes your resume against industry benchmarks, generates custom interview kits, and simulates real high-pressure interviews—all in one place.</p>
+    <div class="hero-btns">
+        <a href="/signup" class="btn-primary">Get Started Free</a>
+        <a href="#features" class="btn-secondary">Explore Features</a>
+    </div>
+</section>
+
+<section class="stats-section">
+    <div>
+        <span class="stat-val">98%</span>
+        <span class="stat-label">ATS Accuracy</span>
+    </div>
+    <div>
+        <span class="stat-val">50k+</span>
+        <span class="stat-label">Interview Qs</span>
+    </div>
+    <div>
+        <span class="stat-val">10/10</span>
+        <span class="stat-label">Deep AI Context</span>
+    </div>
+</section>
+
+<section class="features-section" id="features">
+    <div class="section-title">
+        <h2>Intelligence at Every Step</h2>
+        <p>Built for ambitious professionals who want an unfair advantage.</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-microscope"></i></div>
+            <h3>Deep Gap Analysis</h3>
+            <p>Paste a job description and our AI will scan your resume for critical missing keywords and skills required for that exact role.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-file-pdf"></i></div>
+            <h3>50-Question Masterkit</h3>
+            <p>Generate a customized 50-question interview preparation guide in PDF format, tailored to your resume and your target job's role.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-headset"></i></div>
+            <h3>Interview Simulator</h3>
+            <p>Practice with our real-time AI interviewer. Receive a performance score and feedback on your technical and behavioral answers.</p>
+        </div>
+    </div>
+</section>
+
+<section class="features-section" id="about" style="background: rgba(255,255,255,0.02); border-radius: 40px; margin-bottom: 100px;">
+    <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+        <h2 style="font-size: 32px; margin-bottom: 20px;">Our Mission</h2>
+        <p style="font-size: 18px; color: #94a3b8;">
+            At Orbit AI, we believe the hiring process is broken. Great talent is often filtered out by rigid ATS systems long before an interview. 
+            We've built a career sentinel that gives the power back to you—providing the insights you need to land your dream role.
+        </p>
+        <br />
+        <a href="/signup" class="btn-primary" style="display: inline-block;">Join 10,000+ Professionals</a>
+    </div>
+</section>
