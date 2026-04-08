@@ -1,0 +1,245 @@
+@model AIResumeAnalyzer.MVC.Models.User
+@{
+    ViewData["Title"] = "Settings";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section DashboardStyles {
+    <style>
+        .settings-header {
+            margin-bottom: 30px;
+        }
+
+        .settings-header h1 {
+            font-size: 28px;
+            margin-bottom: 6px;
+            color: #1f2937;
+        }
+
+        .settings-header p {
+            color: #374151;
+        }
+
+        .settings-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            max-width: 800px;
+        }
+
+        .settings-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .settings-section h3 {
+            font-size: 18px;
+            color: #4f46e5;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #fff;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #6a5cff;
+            box-shadow: 0 0 0 3px rgba(106, 92, 255, 0.15);
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .toggle-switch span {
+            font-size: 15px;
+            color: #4b5563;
+        }
+
+        /* Styling the Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #6a5cff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        .btn-save {
+            padding: 12px 30px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #6a5cff, #8b5cf6);
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-save:hover {
+            opacity: 0.9;
+        }
+    </style>
+}
+
+<header class="settings-header">
+    <h1>Settings</h1>
+    <p>Manage your account preferences and application settings.</p>
+</header>
+
+<div class="settings-card">
+    
+    <div class="settings-section">
+        <h3>Notifications</h3>
+        
+        <div class="toggle-switch">
+            <span>Email Alerts for New Matches</span>
+            <label class="switch">
+                <input type="checkbox" id="emailNotifications" @(Model.Settings.EmailNotifications ? "checked" : "")>
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="toggle-switch">
+            <span>Weekly Progress Report</span>
+            <label class="switch">
+                <input type="checkbox" id="weeklyReports" @(Model.Settings.WeeklyReports ? "checked" : "")>
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="toggle-switch">
+            <span>Interview Reminders</span>
+            <label class="switch">
+                <input type="checkbox" id="interviewReminders" @(Model.Settings.InterviewReminders ? "checked" : "")>
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h3>Application Preferences</h3>
+        
+        <div class="form-group">
+            <label>Default Target Job Role</label>
+            <input type="text" id="defaultRole" class="form-control" value="@Model.Settings.DefaultRole" placeholder="e.g. Data Scientist, Frontend Developer..." />
+        </div>
+
+        <div class="form-group">
+            <label>AI Feedback strictness level</label>
+            <select id="aiStrictness" class="form-control">
+                <option value="forgiving" selected="@(Model.Settings.AiStrictness == "forgiving")">Forgiving (Encouraging feedback)</option>
+                <option value="balanced" selected="@(Model.Settings.AiStrictness == "balanced")">Balanced (Standard feedback)</option>
+                <option value="strict" selected="@(Model.Settings.AiStrictness == "strict")">Strict (Tough love, realistic interview style)</option>
+            </select>
+        </div>
+    </div>
+
+    <div>
+        <button class="btn-save" id="saveSettingsBtn">Save Changes</button>
+    </div>
+
+</div>
+
+@section DashboardScripts {
+    <script>
+        document.getElementById('saveSettingsBtn').addEventListener('click', async function() {
+            const settings = {
+                emailNotifications: document.getElementById('emailNotifications').checked,
+                weeklyReports: document.getElementById('weeklyReports').checked,
+                interviewReminders: document.getElementById('interviewReminders').checked,
+                defaultRole: document.getElementById('defaultRole').value,
+                aiStrictness: document.getElementById('aiStrictness').value
+            };
+
+            this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+            this.disabled = true;
+
+            try {
+                const response = await fetch('/api/user/update-settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert("Settings updated successfully!");
+                } else {
+                    alert(data.message || "Failed to update settings.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error connecting to server.");
+            } finally {
+                this.innerHTML = 'Save Changes';
+                this.disabled = false;
+            }
+        });
+    </script>
+}

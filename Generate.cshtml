@@ -1,0 +1,173 @@
+@{
+    ViewData["Title"] = "AI Question Generator";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/question.css" asp-append-version="true" />
+}
+
+<div class="questions-page">
+    <div class="questions-container">
+        <!-- Top Header -->
+        <div class="role-header">
+            <h1 class="gradient-text">AI Question Generator</h1>
+            <p class="subtitle">Curated interview kit for the role of <span class="highlight-role">Python Engineer</span>.</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-glass-card">
+            
+            <!-- Left Panel (AI Info) -->
+            <div class="sidebar-info">
+                <div class="ai-core-container">
+                    <div class="ai-core-crystal">
+                        <i class="fa-solid fa-brain"></i>
+                        <div class="crystal-glow"></div>
+                    </div>
+                </div>
+
+                <h3>Neural Interview Prep</h3>
+                <p>We've fine-tuned an AI model to generate highly likely, critical questions based on your specific job role and experience level.</p>
+
+                <div class="action-wrapper" id="btnContainer">
+                    <button class="generate-btn" id="generateBtn">
+                        <i class="fa-solid fa-microchip"></i> Generate Question Bank
+                    </button>
+                    <p class="helper-text" id="statusText">Click to initialize generation sequence...</p>
+                </div>
+                
+                <a href="#download" class="download-btn" id="downloadBtn" style="display: none;">
+                    <i class="fa-solid fa-file-pdf"></i> Download PDF
+                </a>
+            </div>
+
+            <!-- Right Panel (Questions List) -->
+            <div class="questions-list-area">
+                <div class="section-title">
+                    <i class="fa-solid fa-list-check" style="color: #00f5d4;"></i> Generated Interview Requirements
+                </div>
+
+                <div class="questions-scroll" id="questionsScroll">
+                    <!-- Loading State -->
+                    <div class="ai-loading-state" id="loadingState" style="display: none;">
+                        <div class="data-stream">
+                            <div class="stream-line"></div>
+                            <div class="stream-line"></div>
+                            <div class="stream-line"></div>
+                        </div>
+                        <p class="loading-message" id="loadingMessage">Connecting to inference engine...</p>
+                    </div>
+
+                    <!-- Questions Container -->
+                    <div class="questions-grid" id="questionsContainer">
+                        <!-- Empty initially State -->
+                        <div class="empty-state" id="emptyState">
+                            <i class="fa-solid fa-shapes"></i>
+                            <p>Awaiting generation trigger...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+             const detectedRole = localStorage.getItem("detectedRole");
+             if (detectedRole) {
+                 document.querySelector('.highlight-role').innerText = detectedRole;
+             }
+        });
+
+        document.getElementById('generateBtn').addEventListener('click', async function () {
+            const resumeId = localStorage.getItem("lastResumeId");
+            if (!resumeId) {
+                alert("Please analyze a resume first to generate questions.");
+                window.location.href = "/resume-analyze";
+                return;
+            }
+
+            const btn = this;
+            const statusText = document.getElementById('statusText');
+            const questionsContainer = document.getElementById('questionsContainer');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const btnContainer = document.getElementById('btnContainer');
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            const loadingMessage = document.getElementById('loadingMessage');
+
+            // Set Loading UI
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            btn.classList.add('generating');
+            btn.disabled = true;
+            statusText.innerText = "Extracting key concepts from role description...";
+            
+            if(emptyState) emptyState.style.display = 'none';
+            questionsContainer.innerHTML = '';
+            loadingState.style.display = 'flex';
+
+            try {
+                const response = await fetch('/api/questions/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resumeId: resumeId })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Note: The API returns the PDF URL primarily, but let's assume we can fetch questions too
+                    // or just show the PDF link. 
+                    // Based on InterviewService/QuestionsController, it generates a PDF.
+                    // Let's modify the flow to just provide the download if questions aren't returned in JSON.
+                    
+                    statusText.innerText = "Generation complete!";
+                    loadingState.style.display = 'none';
+                    
+                    // Display placeholder for the list since the API currently only returns PDF URL
+                    questionsContainer.innerHTML = `
+                         <div class="empty-state">
+                            <i class="fa-solid fa-file-pdf" style="color:#00f5d4;"></i>
+                            <p>Full Interview Kit (50 Questions) Generated Successfully!</p>
+                            <p style="font-size:14px; opacity:0.8;">Click below to download your custom PDF guide.</p>
+                        </div>
+                    `;
+
+                    // Update PDF Link
+                    downloadBtn.href = data.data.pdfUrl;
+                    downloadBtn.target = "_blank";
+
+                    // Update Buttons
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Generation Complete';
+                    btn.classList.remove('generating');
+                    btn.classList.add('completed');
+                    
+                    setTimeout(() => {
+                        btnContainer.style.display = 'none';
+                        downloadBtn.style.display = 'flex';
+                        void downloadBtn.offsetWidth;
+                        downloadBtn.classList.add('fade-in');
+                    }, 500);
+                } else {
+                    alert(data.message || "Failed to generate questions.");
+                    resetButton();
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error connecting to server.");
+                resetButton();
+            }
+
+            function resetButton() {
+                btn.innerHTML = '<i class="fa-solid fa-microchip"></i> Generate Question Bank';
+                btn.classList.remove('generating');
+                btn.disabled = false;
+                loadingState.style.display = 'none';
+                if(emptyState) emptyState.style.display = 'block';
+            }
+        });
+    </script>
+}
