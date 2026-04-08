@@ -1,0 +1,61 @@
+@{
+    ViewData["Title"] = "Verify Reset Code";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/LoginForm.css" asp-append-version="true" />
+}
+
+<div class="login-container">
+    <div class="auth-wrapper">
+        <div class="brand-section">
+            <h1 class="brand-name">Orbit AI</h1>
+            <p class="brand-tagline">Navigating your career path.</p>
+        </div>
+
+        <div class="login-form">
+            <h2 class="form-title">Enter Verification Code</h2>
+            <p class="form-subtitle">
+                We've sent a 6-digit code to <strong>@ViewBag.Phone</strong>.
+            </p>
+
+            <label>
+                6-Digit Code
+                <input
+                    type="text"
+                    id="code"
+                    maxlength="6"
+                    placeholder="123456"
+                    style="text-align: center; letter-spacing: 5px; font-size: 1.2em;"
+                    required />
+            </label>
+
+            <button type="button" id="verifyBtn">
+                Verify Code
+            </button>
+
+            <div id="message" style="margin-top: 10px; text-align: center; font-size: 0.9em;"></div>
+
+            <div class="form-footer" style="margin-top: 15px;">
+                <a href="/forgotpassword">Didn't get a code? Resend</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('verifyBtn').onclick = () => {
+        const code = document.getElementById('code').value;
+        const phone = "@ViewBag.Phone";
+        const msg = document.getElementById('message');
+
+        if (code.length !== 6) {
+            msg.style.color = "red";
+            msg.innerText = "Please enter the full 6-digit code.";
+            return;
+        }
+
+        // Redirect to Reset Password with phone and code as params
+        window.location.href = `/reset-password?phone=${encodeURIComponent(phone)}&code=${encodeURIComponent(code)}`;
+    };
+</script>
