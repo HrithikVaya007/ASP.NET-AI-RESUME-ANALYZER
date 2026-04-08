@@ -1,0 +1,58 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var action = ViewContext.RouteData.Values["Action"]?.ToString();
+    var isDashboard = action == "Index";
+    var isHistory = action == "History";
+    var isCompare = action == "Compare";
+    var isSettings = action == "Settings";
+    var isProfile = action == "Profile";
+
+    // Get the user's name from JWT claims (populated by cookie authentication)
+    var userName = User.Identity?.Name ?? "User";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Dashboard.css" asp-append-version="true" />
+    @RenderSection("DashboardStyles", required: false)
+}
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="logo">Orbit AI</h2>
+
+        <nav class="menu">
+            <a href="/dashboard" class="@(isDashboard ? "active" : "")">Dashboard</a>
+            <a href="/dashboard/history" class="@(isHistory ? "active" : "")">History</a>
+            <a href="/dashboard/compare" class="@(isCompare ? "active" : "")">Compare</a>
+            <a href="/dashboard/settings" class="@(isSettings ? "active" : "")">Settings</a>
+            <a href="/dashboard/profile" class="@(isProfile ? "active" : "")">Profile</a>
+        </nav>
+
+        <div class="profile" style="cursor: pointer;" onclick="window.location.href='/dashboard/profile'">
+            <p class="username">Hello, @userName</p>
+            <button class="logout-btn" onclick="event.stopPropagation(); handleLogout();">Logout</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        @RenderBody()
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        async function handleLogout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+            } catch (e) {
+                // Even if the API call fails, still redirect
+            }
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("userName");
+            window.location.href = '/login';
+        }
+    </script>
+    @RenderSection("DashboardScripts", required: false)
+}

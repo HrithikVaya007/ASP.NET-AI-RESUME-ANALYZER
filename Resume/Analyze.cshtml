@@ -1,0 +1,378 @@
+@{
+    ViewData["Title"] = "Resume Analysis";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/resume.css" asp-append-version="true" />
+    <style>
+        .history-pick-btn {
+            background: rgba(106, 92, 255, 0.1);
+            border: 1px solid rgba(106, 92, 255, 0.3);
+            color: #6a5cff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        .history-pick-btn:hover {
+            background: #6a5cff;
+            color: #fff;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: #fff;
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 16px;
+            width: 50%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            color: #1f2937;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+        .history-item {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-item:hover {
+            background: #f9fafb;
+        }
+        .history-item h4 { margin: 0; font-size: 16px; }
+        .history-item p { margin: 0; font-size: 12px; color: #6b7280; }
+    </style>
+}
+
+<div class="resume-page">
+    <div class="resume-card">
+        <div class="resume-header">
+            <h2>AI Resume Analysis</h2>
+            <p class="subtitle">Upload your resume and paste the Job Description to get an advanced, deep-learning based gap analysis.</p>
+            <button class="history-pick-btn" onclick="openHistoryModal()">
+                <i class="fa-solid fa-clock-rotate-left"></i> Select from History
+            </button>
+        </div>
+
+        <div class="upload-section">
+            <div class="file-upload-wrapper" id="dropZone">
+                <input type="file" id="resumeFile" accept=".pdf,.docx" hidden />
+                <div class="file-upload-content" onclick="document.getElementById('resumeFile').click()">
+                    <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                    <p class="upload-text">Drag & Drop or <span class="highlight">Browse</span> File</p>
+                    <p class="upload-hint">Supported formats: PDF, DOCX</p>
+                    <p class="selected-file-name" id="fileNameDisplay"></p>
+                </div>
+            </div>
+            
+            <div class="jd-wrapper">
+                <textarea id="jdInput" placeholder="Paste the target Job Description here..."></textarea>
+            </div>
+        </div>
+
+        <button class="analyze-btn" id="analyzeBtn">
+            <span class="btn-text">Initialize AI Analysis</span>
+            <i class="fa-solid fa-wand-magic-sparkles btn-icon"></i>
+        </button>
+
+        <div class="ai-thinking" id="loadingState" style="display: none;">
+            <div class="spinner"></div>
+            <p>Neural engine analyzing context, extracting keywords, and computing match score...</p>
+        </div>
+
+        <!-- Results layout -->
+        <div class="result-layout fade-in" id="resultLayout" style="display: none;">
+            
+            <!-- Left Metrics -->
+            <div class="metrics-column">
+                <div class="meter-card glass-panel">
+                    <h4>Overall Match Probability</h4>
+                    <div class="circular-meter" id="skillMeter" style="background: conic-gradient(#00f5d4 270deg, rgba(255,255,255,0.05) 0deg);">
+                        <div class="inner-circle">
+                            <span id="skillValue">75%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meter-card glass-panel">
+                    <h4>ATS Readability Score</h4>
+                    <div class="score-bar">
+                        <div class="score-fill" id="scoreFill" style="width: 68%;"></div>
+                    </div>
+                    <p class="score-value" id="scoreValue">68 / 100</p>
+                    <p class="score-hint">Formatting & parseability check</p>
+                </div>
+
+                <div class="meter-card glass-panel">
+                    <h4>Critical Missing Keywords</h4>
+                    <div class="missing-skills-container" id="missingSkillsContainer">
+                        <!-- Skills injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right AI Suggestions -->
+            <div class="suggestions-column">
+                <div class="ai-suggestions-card glass-panel">
+                    <div class="suggestions-header">
+                        <i class="fa-solid fa-robot"></i>
+                        <h3>Orbit AI Recommendations</h3>
+                    </div>
+                    <ul class="suggestions-list" id="suggestionsContainer">
+                        <!-- Suggestions injected via JS -->
+                    </ul>
+                </div>
+                
+                <div class="action-footer">
+                    <button id="downloadReportBtn" class="export-btn"><i class="fa-solid fa-file-pdf"></i> Download AI Report</button>
+                    <button class="simulator-redirect-btn" onclick="window.location.href='/ai-simulator'"><i class="fa-solid fa-chalkboard-user"></i> Practice Interview</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- History Selection Modal -->
+<div id="historyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Select from Analysis History</h3>
+            <span class="close-modal" onclick="closeHistoryModal()">&times;</span>
+        </div>
+        <div id="historyListContent">
+            <p>Loading your history...</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openHistoryModal() {
+            document.getElementById('historyModal').style.display = 'block';
+            fetchHistory();
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        async function fetchHistory() {
+            const container = document.getElementById('historyListContent');
+            try {
+                const response = await fetch('/api/history/resumes');
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    if (data.data.length === 0) {
+                        container.innerHTML = '<p>No history found.</p>';
+                        return;
+                    }
+                    let html = "";
+                    data.data.forEach(r => {
+                        const escapedJd = r.jobDescription.replace(/'/g, "\\'").replace(/\n/g, " ");
+                        html += '<div class="history-item" onclick="selectHistoryItem(\'' + r.id + '\', \'' + r.detectedRole + '\', \'' + escapedJd + '\')">' +
+                            '<div>' +
+                                '<h4>' + r.originalFileName + '</h4>' +
+                                '<p>Analyzed: ' + new Date(r.uploadedAt).toLocaleDateString() + ' | Role: ' + r.detectedRole + '</p>' +
+                            '</div>' +
+                            '<i class="fa-solid fa-chevron-right"></i>' +
+                        '</div>';
+                    });
+                    container.innerHTML = html;
+                }
+            } catch (err) {
+                container.innerHTML = '<p>Error loading history.</p>';
+            }
+        }
+
+        function selectHistoryItem(id, role, jd) {
+            localStorage.setItem("lastResumeId", id);
+            localStorage.setItem("detectedRole", role);
+            document.getElementById('jdInput').value = jd;
+            closeHistoryModal();
+            alert("Resume and Job Description loaded from history! You can now re-analyze or proceed to other steps.");
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('historyModal');
+            if (event.target == modal) closeHistoryModal();
+        }
+
+        // File selection handling
+        const fileInput = document.getElementById('resumeFile');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const dropZone = document.getElementById('dropZone');
+
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files.length > 0) {
+                fileNameDisplay.innerText = this.files[0].name;
+                dropZone.classList.add('has-file');
+            } else {
+                fileNameDisplay.innerText = '';
+                dropZone.classList.remove('has-file');
+            }
+        });
+
+        // Drag and Drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                fileNameDisplay.innerText = e.dataTransfer.files[0].name;
+                dropZone.classList.add('has-file');
+            }
+        });
+
+
+        // Analysis trigger
+        document.getElementById('analyzeBtn').addEventListener('click', async function () {
+            const jdInput = document.getElementById('jdInput');
+
+            if (!fileInput.files.length || !jdInput.value.trim()) {
+                alert("Please upload a resume and provide a job description for accurate analysis.");
+                return;
+            }
+
+            // Hide old results, show loader
+            document.getElementById('resultLayout').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'flex';
+            this.style.opacity = '0.5';
+            this.style.pointerEvents = 'none';
+
+            const formData = new FormData();
+            formData.append('File', fileInput.files[0]);
+            formData.append('JobDescription', jdInput.value.trim());
+
+            try {
+                const response = await fetch('/api/resume/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const result = data.data;
+                    
+                    // Store resumeId for Card 2 and 3
+                    localStorage.setItem("lastResumeId", result.id);
+                    localStorage.setItem("detectedRole", result.detectedRole);
+
+                    // Populate Gauge
+                    const skillDeg = result.skillMatchPercentage * 3.6;
+                    let gaugeColor = "#00f5d4"; // green
+                    if(result.skillMatchPercentage < 50) gaugeColor = "#ff3b3b"; // red
+                    else if (result.skillMatchPercentage < 75) gaugeColor = "#f1c40f"; // yellow
+
+                    document.getElementById('skillMeter').style.background = `conic-gradient(${gaugeColor} ${skillDeg}deg, rgba(255,255,255,0.05) 0deg)`;
+                    document.getElementById('skillValue').innerText = `${result.skillMatchPercentage}%`;
+                    document.getElementById('skillValue').style.color = gaugeColor;
+
+                    // Populate ATS Bar
+                    document.getElementById('scoreFill').style.width = `${result.atsScore}%`;
+                    document.getElementById('scoreValue').innerText = `${result.atsScore} / 100`;
+
+                    // Populate Missing Skills
+                    const missingHtml = result.missingSkills.map((skillName, i) => `
+                        <div class="skill-item" style="animation-delay: ${0.2 + (i * 0.1)}s">
+                            <div class="skill-header">
+                                <span class="skill-name">${skillName}</span>
+                            </div>
+                            <div class="skill-bar-bg">
+                                <div class="skill-bar-fill" style="width: 100%; background: ${gaugeColor}"></div>
+                            </div>
+                        </div>`).join('');
+                    document.getElementById('missingSkillsContainer').innerHTML = missingHtml || '<p style="color:#9ca3af; font-size:14px;">No critical missing keywords detected.</p>';
+
+                    // Populate Suggestions
+                    const suggestionsHtml = result.suggestions.map((s, i) => `
+                        <li style="animation-delay: ${0.3 + (i * 0.15)}s">
+                            <i class="fa-solid fa-bolt suggestion-icon"></i>
+                            <span class="suggestion-text">${s}</span>
+                        </li>
+                    `).join('');
+                    document.getElementById('suggestionsContainer').innerHTML = suggestionsHtml || '<li>No specific recommendations at this time.</li>';
+
+                    // Reveal UI
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('resultLayout').style.display = 'grid';
+                } else {
+                    alert(data.message || "Analysis failed.");
+                    document.getElementById('loadingState').style.display = 'none';
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error connecting to server.");
+                document.getElementById('loadingState').style.display = 'none';
+            } finally {
+                this.style.opacity = '1';
+                this.style.pointerEvents = 'auto';
+            }
+        });
+
+        document.getElementById('downloadReportBtn').addEventListener('click', async function() {
+            const resumeId = localStorage.getItem("lastResumeId");
+            if (!resumeId) {
+                alert("Please analyze a resume first.");
+                return;
+            }
+
+            this.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
+            this.style.pointerEvents = 'none';
+
+            try {
+                const response = await fetch(`/api/resume/report/${resumeId}`);
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    window.open(data.data.url, '_blank');
+                } else {
+                    alert("Failed to generate report.");
+                }
+            } catch (err) {
+                alert("Error connecting to server.");
+            } finally {
+                this.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download AI Report';
+                this.style.pointerEvents = 'auto';
+            }
+        });
+    </script>
+}
